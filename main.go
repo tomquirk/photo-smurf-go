@@ -34,9 +34,32 @@ func parseAlbumConf(confFilePath string) []album {
 	return albums
 }
 
-func isFileType(path string, exts []string) bool {
+func getDstPath(filePath string, dstDirRoot string, albums []album) string {
+	fileStat, err := times.Stat(filePath)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	birthTime := fileStat.BirthTime()
+	filePathTree := strings.Split(filePath, "/")
+
+	for _, album := range albums {
+		start, _ := time.Parse(time.RFC822, album.StartTime)
+		end, _ := time.Parse(time.RFC822, album.EndTime)
+
+		if birthTime.After(start) && birthTime.Before(end) {
+			return fmt.Sprintf("%s%s/%s", dstDirRoot, album.Name, filePathTree[len(filePathTree)-1])
+		}
+	}
+
+	return ""
+}
+
+func match(filePath string) bool {
+	exts := []string{"cr2", "jpg"}
+
 	for _, ext := range exts {
-		if strings.ToLower(filepath.Ext(path)) == "."+strings.ToLower(ext) {
+		if strings.ToLower(filepath.Ext(filePath)) == "."+strings.ToLower(ext) {
 			return true
 		}
 	}
@@ -44,32 +67,14 @@ func isFileType(path string, exts []string) bool {
 	return false
 }
 
-func getDstPath(albums []album, dstDirRoot string) filesmurf.GetDstPath {
-	return func(filePath string) string {
-		exts := []string{"cr2", "jpg"}
-
-		if !isFileType(filePath, exts) {
-			return ""
+func action(srcFilePath string, dstDirRoot string, albums []album) filesmurf.ActionFunc {
+	return func(filePath string) {
+		dstPath := getDstPath(srcFilePath, dstDirRoot, albums)
+		if dstPath != "" {
+			pathTree := strings.Split(dstPath, "/")
+			os.MkdirAll(strings.Join(pathTree[:len(pathTree)-1], "/"), os.ModePerm)
+			os.Rename(filePath, dstPath)
 		}
-
-		fileStat, err := times.Stat(filePath)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		birthTime := fileStat.BirthTime()
-		filePathTree := strings.Split(filePath, "/")
-
-		for _, album := range albums {
-			start, _ := time.Parse(time.RFC822, album.StartTime)
-			end, _ := time.Parse(time.RFC822, album.EndTime)
-
-			if birthTime.After(start) && birthTime.Before(end) {
-				return fmt.Sprintf("%s%s/%s", dstDirRoot, album.Name, filePathTree[len(filePathTree)-1])
-			}
-		}
-
-		return ""
 	}
 }
 
@@ -83,5 +88,5 @@ func main() {
 	}
 
 	albums := parseAlbumConf(albumPathRoot)
-	filesmurf.Run(srcPathRoot, getDstPath(albums, dstPathRoot))
+	filesmurf.Run(srcPathRoot, match, action(srcPathRoot, dstPathRoot, albums))
 }
