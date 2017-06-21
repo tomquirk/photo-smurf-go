@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -68,13 +69,14 @@ func match(filePath string) bool {
 }
 
 func action(srcFilePath string, dstDirRoot string, albums []album) filesmurf.ActionFunc {
-	return func(filePath string) {
-		dstPath := getDstPath(srcFilePath, dstDirRoot, albums)
-		if dstPath != "" {
-			pathTree := strings.Split(dstPath, "/")
-			os.MkdirAll(strings.Join(pathTree[:len(pathTree)-1], "/"), os.ModePerm)
-			os.Rename(filePath, dstPath)
+	return func(filePath string) error {
+		dstFilePath := getDstPath(srcFilePath, dstDirRoot, albums)
+		if dstFilePath == "" {
+			return errors.New("dest path cannot be empty")
 		}
+
+		filesmurf.Move(srcFilePath, dstFilePath)
+		return nil
 	}
 }
 
