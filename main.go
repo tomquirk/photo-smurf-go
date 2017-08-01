@@ -74,21 +74,21 @@ func matchImage(filePath string) bool {
 }
 
 // moveImage moves a file at a given file path to a given destination
-func moveImage(srcFilePath string, dstDirRoot string, albums []album) filesmurf.ActionFunc {
+func moveImage(srcDirPath string, dstDirPath string, albums []album) filesmurf.ActionFunc {
 	return func(filePath string) error {
-		dstFilePath := getDstPath(srcFilePath, dstDirRoot, albums)
+		dstFilePath := getDstPath(filePath, dstDirPath, albums)
 		if dstFilePath == "" {
 			return errors.New("dest path cannot be empty")
 		}
 
-		filesmurf.Move(srcFilePath, dstFilePath)
+		filesmurf.Move(filePath, dstFilePath)
 		return nil
 	}
 }
 
 func main() {
-	srcPathRoot := os.Args[1]
-	dstPathRoot := os.Args[2]
+	srcDirPath := os.Args[1]
+	dstDirPath := os.Args[2]
 	albumPathRoot := "./albums.json"
 
 	if len(os.Args) == 4 {
@@ -96,5 +96,5 @@ func main() {
 	}
 
 	albums := parseAlbumConf(albumPathRoot)
-	filesmurf.Run(srcPathRoot, matchImage, moveImage(srcPathRoot, dstPathRoot, albums))
+	filesmurf.Run(srcDirPath, matchImage, moveImage(srcDirPath, dstDirPath, albums))
 }
