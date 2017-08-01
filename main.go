@@ -15,12 +15,15 @@ import (
 	"github.com/tomquirk/filesmurf"
 )
 
+// album structs represent a single album (collection of images)
 type album struct {
 	Name      string `json:"name"`
 	StartTime string `json:"startTime"`
 	EndTime   string `json:"endTime"`
 }
 
+// parseAlbumConf parses an album configuration file at a given location and returns
+// an array of album structs
 func parseAlbumConf(confFilePath string) []album {
 	var albums []album
 
@@ -35,6 +38,7 @@ func parseAlbumConf(confFilePath string) []album {
 	return albums
 }
 
+// getDstPath returns the appropriate destination path for a file at a given file path
 func getDstPath(filePath string, dstDirRoot string, albums []album) string {
 	fileStat, err := times.Stat(filePath)
 	if err != nil {
@@ -56,7 +60,8 @@ func getDstPath(filePath string, dstDirRoot string, albums []album) string {
 	return ""
 }
 
-func match(filePath string) bool {
+// matchImage determines whether the file at a given file path is an image
+func matchImage(filePath string) bool {
 	exts := []string{"cr2", "jpg"}
 
 	for _, ext := range exts {
@@ -68,7 +73,8 @@ func match(filePath string) bool {
 	return false
 }
 
-func action(srcFilePath string, dstDirRoot string, albums []album) filesmurf.ActionFunc {
+// moveImage moves a file at a given file path to a given destination
+func moveImage(srcFilePath string, dstDirRoot string, albums []album) filesmurf.ActionFunc {
 	return func(filePath string) error {
 		dstFilePath := getDstPath(srcFilePath, dstDirRoot, albums)
 		if dstFilePath == "" {
@@ -90,5 +96,5 @@ func main() {
 	}
 
 	albums := parseAlbumConf(albumPathRoot)
-	filesmurf.Run(srcPathRoot, match, action(srcPathRoot, dstPathRoot, albums))
+	filesmurf.Run(srcPathRoot, matchImage, moveImage(srcPathRoot, dstPathRoot, albums))
 }

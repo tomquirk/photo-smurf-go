@@ -12,26 +12,30 @@ Simply tell these smurfs when you went on holidays i.e New Zealand between 27/01
 
 This project is a Go implementation of [photo-smurf](https://github.com/tomquirk/photo-smurf), originally written in Python. I haven't done benchmarks, but `Go > Python` :joy:
 
+## Installation
+```
+go install github.com/tomquirk/photosmurf
+```
+
 ## Usage
 
 Create an _albums_ config file as described below
 
 ### CLI
 ```
-go install github.com/tomquirk/photosmurf
-photosmurf [srcRootPath] [destRootPath] [album_config]
+photosmurf [srcRootPath] [destRootPath] [albumConfigPath]
 ```
 
 ## The Album Config File
-- Make sure your album name contains NO SPACES (because that's silly)!
+- Make sure your album `name` contains NO SPACES (because that's silly)!
 
 #### Example
-> albums.txt
 
 ```
+// albums.txt
 [
   {
-    "name": "p_holiday_tasmania-2016",
+    "name": "p_holiday_tasmania-2016", // no spaces
     "startTime": "18 Dec 16 00:00 UTC",
     "endTime": "26 Dec 16 00:00 UTC"
   },
